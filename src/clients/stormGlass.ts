@@ -64,14 +64,6 @@ export class StormGlass {
   constructor(protected request: AxiosStatic = axios) {}
 
   public async fetchPoints(lat: number, lon: number): Promise<ForecastPoint[]> {
-    console.log(
-      `${stormGlassConfig.get(
-        'apiUrl'
-      )}/weather/point?lat=${lat}&lng=${lon}&params=${
-        this.stormGlassAPIParams
-      }&source=${this.stormGlassAPISource}`
-    );
-
     try {
       const response = await this.request.get<StormGlassForecastResponse>(
         `${stormGlassConfig.get(
