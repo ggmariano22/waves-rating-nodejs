@@ -1,6 +1,7 @@
-import axios, { AxiosError, AxiosStatic } from 'axios';
+import * as HTTPUtil from '@src/util/request';
 import InternalError from '@src/util/errors/internal-error';
 import config, { IConfig } from 'config';
+import { AxiosError } from 'axios';
 
 //interfaces to create and normalize stormglass response
 export interface StormGlassPointSource {
@@ -61,7 +62,8 @@ export class StormGlass {
 
   readonly stormGlassAPISource = 'noaa';
 
-  constructor(protected request: AxiosStatic = axios) {}
+  //constructor(protected request: AxiosStatic = axios) {}
+  constructor(protected request = new HTTPUtil.Request()) {}
 
   public async fetchPoints(lat: number, lon: number): Promise<ForecastPoint[]> {
     try {
@@ -80,22 +82,15 @@ export class StormGlass {
 
       return this.normalizeResponse(response.data);
     } catch (err) {
-      const axiosError = err as AxiosError;
+      if (err instanceof Error && HTTPUtil.Request.isRequestError(err)) {
+        const error = HTTPUtil.Request.extractErrorData(err);
 
-      if (
-        axiosError instanceof Error &&
-        axiosError.response &&
-        axiosError.response.status
-      ) {
         throw new StormGlassResponseError(
-          `Error: ${JSON.stringify(axiosError.response.data)} Code: ${
-            axiosError.response.status
-          }`
+          `Error: ${JSON.stringify(error.data)} Code: ${error.status}`
         );
       }
 
-      // The type is temporary given we will rework it in the upcoming chapters
-      throw new ClientRequestError(axiosError.message);
+      throw new ClientRequestError((err as Error).message);
     }
   }
 
